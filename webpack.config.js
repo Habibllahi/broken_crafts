@@ -3,6 +3,8 @@ const webpack = require("webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
 const CopyPlugin = require("copy-webpack-plugin");
+const { stat } = require("fs");
+const { Stats } = require("webpack");
 
 let localCanisters, prodCanisters, canisters;
 
@@ -30,7 +32,7 @@ function initCanisterIds() {
   }
 }
 initCanisterIds();
-
+Stats.children = true;
 const isDevelopment = process.env.NODE_ENV !== "production";
 const asset_entry = path.join(
   "src",
@@ -43,9 +45,15 @@ module.exports = {
   target: "web",
   mode: isDevelopment ? "development" : "production",
   entry: {
-    // The frontend.entrypoint points to the HTML file for this build, so we need
-    // to replace the extension to `.js`.
-    index: path.join(__dirname, asset_entry).replace(/\.html$/, ".js"),
+    // The Javascript frontend.entrypoint points to the HTML file for this build.
+    index: path.join(
+      __dirname,  
+      "src",
+      "broken_crafts_assets",
+      "src",
+      "ts",
+      "index.ts"
+      )
   },
   devtool: isDevelopment ? "source-map" : false,
   optimization: {
@@ -63,7 +71,7 @@ module.exports = {
     },
   },
   output: {
-    filename: "index.js",
+    filename: "main.js",
     path: path.join(__dirname, "dist", "broken_crafts_assets"),
   },
 
@@ -72,12 +80,26 @@ module.exports = {
   // webpack configuration. For example, if you are using React
   // modules and CSS as described in the "Adding a stylesheet"
   // tutorial, uncomment the following lines:
-  // module: {
-  //  rules: [
-  //    { test: /\.(ts|tsx|jsx)$/, loader: "ts-loader" },
-  //    { test: /\.css$/, use: ['style-loader','css-loader'] }
-  //  ]
-  // },
+  module: {
+  rules: [
+      { 
+        test: /\.(ts|tsx|jsx)$/, 
+        loader: "ts-loader",
+      },
+      { 
+        test: /\.css$/, 
+        use: ['style-loader','css-loader'] 
+      },
+      {
+        test: /\.(png|jpe?g|gif)$/i,
+        use: [
+          {
+            loader: 'file-loader',
+          }
+        ]
+      },
+    ]
+  },
   plugins: [
     new HtmlWebpackPlugin({
       template: path.join(__dirname, asset_entry),
